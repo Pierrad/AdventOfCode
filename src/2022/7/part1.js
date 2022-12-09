@@ -7,9 +7,7 @@ const main = () => {
   let currentDirectory = []
   let directories = {}
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
+  lines.forEach((line) => {
     if (line.startsWith("$")) {
       const command = line.split(" ")[1]
 
@@ -27,25 +25,44 @@ const main = () => {
     } else {
       if (line.startsWith("dir")) {
         const directory = line.split(" ")[1]
-        const directoryPath = currentDirectory.join("/") + "/" + directory
+        const directoryPath = currentDirectory.length
+          ? currentDirectory.join("/") + "/" + directory
+          : directory
         directories[directoryPath] = 0
       } else {
         const fileSize = parseInt(line.split(" ")[0], 10)
-        const directory = currentDirectory.join("/")
-        directories[directory] += parseInt(fileSize, 10)
+        const directory = currentDirectory.length
+          ? currentDirectory.join("/")
+          : "/"
+        if (!directories[directory]) {
+          directories[directory] = fileSize
+        } else {
+          directories[directory] += fileSize
+        }
       }
     }
+  })
+
+  let totalSize = 0
+
+  function findSize(directory, directories) {
+    let size = directories[directory]
+    for (const subDirectory in directories) {
+      if (subDirectory.startsWith(directory + "/")) {
+        size += findSize(subDirectory, directories)
+      }
+    }
+    return size
   }
-
-  console.log(directories)
-
-  let sum = 0
-  for (let dirName in directories) {
-    if (directories[dirName] <= 100000) {
-      sum += directories[dirName];
+  
+  for (const directory in directories) {
+    const size = findSize(directory, directories)
+    if (size <= 100000) {
+      totalSize += size
     }
   }
-  return sum
+
+  return totalSize;
 }
 
 console.log(main())
